@@ -14,23 +14,25 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background: #ea6699;
             color: #333;
+            min-height: 100vh;
         }
 
+        /* 限制整个主容器的高度，不会因为内部内容过长而撑开页面 */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            min-height: 100vh;
+            max-height: calc(100vh - 20px); /* 限制为视口高度，减去一些间距 */
             display: flex;
             flex-direction: column;
+            overflow: hidden; /* 隐藏溢出，让内层滚动而不是撑开页面 */
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             color: white;
         }
 
@@ -45,11 +47,13 @@
             opacity: 0.9;
         }
 
+        /* main-content 作为一个固定高度的区域，内部的 sidebar / editor 各自滚动 */
         .main-content {
             display: grid;
             grid-template-columns: 1fr 2fr;
             gap: 30px;
             flex: 1;
+            overflow: hidden; /* 保证不会产生页面级别滚动 */
         }
 
         .sidebar {
@@ -58,7 +62,16 @@
             padding: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             backdrop-filter: blur(10px);
-            height: fit-content;
+            width: 350px;         /* 固定宽度 */
+            max-width: 110%;      /* 防止溢出 */
+            min-width: 220px;     /* 可选，保证最小宽度 */
+            box-sizing: border-box;
+            overflow-wrap: break-word; /* 防止内容撑宽 */
+            overflow-x: hidden; /* 禁止横向滚动条 */
+
+            /* 限制侧边栏高度并允许垂直滚动 */
+            max-height: calc(100vh - 160px);
+            overflow-y: auto;
         }
 
         .note-editor {
@@ -69,6 +82,10 @@
             backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
+
+            /* 限制编辑器高度并允许内部滚动（不会撑高整个页面） */
+            max-height: calc(100vh - 160px);
+            overflow: auto;
         }
 
         .search-box {
@@ -83,13 +100,13 @@
 
         .search-box:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #ea6699;
         }
 
         .new-note-btn {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ea6699;
             color: white;
             border: none;
             border-radius: 10px;
@@ -121,12 +138,12 @@
         }
 
         .note-item:hover {
-            border-color: #667eea;
+            border-color: #ea6699;
             transform: translateX(5px);
         }
 
         .note-item.active {
-            border-color: #667eea;
+            border-color: #ea6699;
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
         }
 
@@ -135,6 +152,11 @@
             font-size: 16px;
             margin-bottom: 5px;
             color: #333;
+
+            /* 当标题很长时使用单行省略号 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .note-preview {
@@ -142,7 +164,7 @@
             color: #666;
             line-height: 1.4;
             display: -webkit-box;
-            -webkit-line-clamp: 2;
+            -webkit-line-clamp: 2; /* 预览最多两行，超出显示... */
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -160,9 +182,14 @@
             margin-bottom: 20px;
         }
 
+        /* 如果编辑器标题很长，则使用省略号并限制宽度 */
         .editor-title {
             font-size: 1.5rem;
             color: #333;
+            max-width: 70%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .editor-actions {
@@ -222,12 +249,13 @@
 
         .form-input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #ea6699;
         }
 
         .form-textarea {
             width: 100%;
-            min-height: 300px;
+            min-height: 200px;
+            max-height: calc(100vh - 420px); /* 限制文本域最大高度，超出内部滚动 */
             padding: 15px;
             border: 2px solid #e1e5e9;
             border-radius: 10px;
@@ -236,11 +264,12 @@
             resize: vertical;
             transition: border-color 0.3s ease;
             line-height: 1.6;
+            overflow: auto; /* 多出来的内容滚动，而不是撑开页面 */
         }
 
         .form-textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #ea6699;
         }
 
         .empty-state {
@@ -289,17 +318,22 @@
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
-            
+
             .header h1 {
                 font-size: 2rem;
             }
-            
+
             .container {
                 padding: 15px;
             }
-            
+
             .sidebar, .note-editor {
                 padding: 20px;
+                max-height: calc(100vh - 140px);
+            }
+
+            .editor-title {
+                max-width: 60%;
             }
         }
 
@@ -314,13 +348,20 @@
         }
 
         .notes-list::-webkit-scrollbar-thumb {
-            background: #667eea;
+            background: #ea6699;
             border-radius: 3px;
         }
 
         .notes-list::-webkit-scrollbar-thumb:hover {
             background: #5a6fd8;
         }
+
+        .notes-list {
+            max-height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden; /* 禁止横向滚动条 */
+        }
+
     </style>
 </head>
 <body>
@@ -334,7 +375,7 @@
             <div class="sidebar">
                 <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search notes...">
                 <button class="new-note-btn" id="newNoteBtn">✨ New Note</button>
-                
+
                 <div class="notes-list" id="notesList">
                     <div class="loading">Loading notes...</div>
                 </div>
@@ -390,7 +431,7 @@
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
-                
+
                 // Auto-save on content change (debounced)
                 let saveTimeout;
                 const autoSave = () => {
@@ -401,7 +442,7 @@
                         }
                     }, 2000);
                 };
-                
+
                 document.getElementById('noteTitle').addEventListener('input', autoSave);
                 document.getElementById('noteContent').addEventListener('input', autoSave);
             }
@@ -409,11 +450,11 @@
             async loadNotes() {
                 this.isLoading = true;
                 this.showMessage('Loading notes...', 'loading');
-                
+
                 try {
                     const response = await fetch('/api/notes');
                     if (!response.ok) throw new Error('Failed to load notes');
-                    
+
                     this.notes = await response.json();
                     this.renderNotesList();
                     this.hideMessage();
@@ -426,14 +467,14 @@
 
             renderNotesList() {
                 const notesList = document.getElementById('notesList');
-                
+
                 if (this.notes.length === 0) {
                     notesList.innerHTML = '<div class="empty-state"><p>No notes yet. Create your first note!</p></div>';
                     return;
                 }
 
                 notesList.innerHTML = this.notes.map(note => `
-                    <div class="note-item ${this.currentNote && this.currentNote.id === note.id ? 'active' : ''}" 
+                    <div class="note-item ${this.currentNote && this.currentNote.id === note.id ? 'active' : ''}"
                          data-note-id="${note.id}" onclick="noteTaker.selectNote(${note.id})">
                         <div class="note-title">${this.escapeHtml(note.title || 'Untitled')}</div>
                         <div class="note-preview">${this.escapeHtml(note.content || 'No content')}</div>
@@ -449,7 +490,7 @@
                 this.currentNote = note;
                 this.showEditor();
                 this.renderNotesList(); // Re-render to update active state
-                
+
                 document.getElementById('noteTitle').value = note.title || '';
                 document.getElementById('noteContent').value = note.content || '';
                 document.getElementById('editorTitle').textContent = note.title || 'Untitled Note';
@@ -463,13 +504,13 @@
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 };
-                
+
                 this.showEditor();
                 document.getElementById('noteTitle').value = '';
                 document.getElementById('noteContent').value = '';
                 document.getElementById('editorTitle').textContent = 'New Note';
                 document.getElementById('noteTitle').focus();
-                
+
                 // Remove active state from all notes
                 document.querySelectorAll('.note-item').forEach(item => {
                     item.classList.remove('active');
@@ -530,7 +571,7 @@
 
                     const savedNote = await response.json();
                     this.currentNote = savedNote;
-                    
+
                     // Update notes list
                     const existingIndex = this.notes.findIndex(n => n.id === savedNote.id);
                     if (existingIndex >= 0) {
@@ -538,10 +579,10 @@
                     } else {
                         this.notes.unshift(savedNote);
                     }
-                    
+
                     this.renderNotesList();
                     document.getElementById('editorTitle').textContent = savedNote.title;
-                    
+
                     if (!isAutoSave) {
                         this.showMessage('Note saved successfully!', 'success');
                     }
@@ -573,8 +614,8 @@
             }
 
             searchNotes(query) {
-                const filteredNotes = query.trim() === '' ? this.notes : 
-                    this.notes.filter(note => 
+                const filteredNotes = query.trim() === '' ? this.notes :
+                    this.notes.filter(note =>
                         (note.title && note.title.toLowerCase().includes(query.toLowerCase())) ||
                         (note.content && note.content.toLowerCase().includes(query.toLowerCase()))
                     );
@@ -586,7 +627,7 @@
                 }
 
                 notesList.innerHTML = filteredNotes.map(note => `
-                    <div class="note-item ${this.currentNote && this.currentNote.id === note.id ? 'active' : ''}" 
+                    <div class="note-item ${this.currentNote && this.currentNote.id === note.id ? 'active' : ''}"
                          data-note-id="${note.id}" onclick="noteTaker.selectNote(${note.id})">
                         <div class="note-title">${this.escapeHtml(note.title || 'Untitled')}</div>
                         <div class="note-preview">${this.escapeHtml(note.content || 'No content')}</div>
@@ -598,7 +639,7 @@
             showMessage(message, type) {
                 const messageArea = document.getElementById('messageArea');
                 messageArea.innerHTML = `<div class="${type}">${message}</div>`;
-                
+
                 if (type === 'success') {
                     setTimeout(() => this.hideMessage(), 3000);
                 }
@@ -637,4 +678,3 @@
     </script>
 </body>
 </html>
-
