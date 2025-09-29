@@ -9,6 +9,7 @@ A modern, responsive web application for managing personal notes with a beautifu
 - **Edit Notes**: Update existing notes with real-time editing
 - **Delete Notes**: Remove notes you no longer need
 - **Search Notes**: Find notes quickly by searching titles and content
+- **🧠 AI Information Extraction**: Extract key information from note content using GitHub's large language model API
 - **Auto-save**: Notes are automatically saved as you type
 - **Responsive Design**: Works perfectly on desktop and mobile devices
 - **Modern UI**: Beautiful gradient design with smooth animations
@@ -80,12 +81,26 @@ notetaking-app/
    pip install -r requirements.txt
    ```
 
-4. **Run the application**
+4. **Configure GitHub Token (for AI features)**
+   ```bash
+   # On Windows
+   set GITHUB_TOKEN=your_github_token_here
+   
+   # On Linux/Mac
+   export GITHUB_TOKEN=your_github_token_here
+   ```
+   
+   Or create a `.env` file in the project root:
+   ```
+   GITHUB_TOKEN=your_github_token_here
+   ```
+
+5. **Run the application**
    ```bash
    python src/main.py
    ```
 
-5. **Access the application**
+6. **Access the application**
    - Open your browser and go to `http://localhost:5001`
 
 ## 📡 API Endpoints
@@ -97,6 +112,7 @@ notetaking-app/
 - `PUT /api/notes/<id>` - Update a note
 - `DELETE /api/notes/<id>` - Delete a note
 - `GET /api/notes/search?q=<query>` - Search notes
+- `POST /api/notes/extract-info` - Extract key information using AI
 
 ### Request/Response Format
 ```json
