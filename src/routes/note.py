@@ -105,7 +105,15 @@ def extract_information():
         if note_id and note:
             note.extracted_info = extracted_info
             note.extracted_at = datetime.utcnow()
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception as db_e:
+                # 打印数据库提交错误与回溯，便于 Vercel 日志排查
+                import traceback as _tb
+                print('Exception committing extracted info to DB:', str(db_e))
+                _tb.print_exc()
+                db.session.rollback()
+                return jsonify({'error': '保存提取信息失败', 'detail': str(db_e)}), 500
         
         return jsonify({
             'success': True,
@@ -114,6 +122,13 @@ def extract_information():
         })
         
     except Exception as e:
-        db.session.rollback()
+        # 捕获并打印完整回溯，便于在 Vercel 日志中查看根因
+        import traceback as _tb
+        print('Exception in /api/notes/extract-info:', str(e))
+        _tb.print_exc()
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         return jsonify({'error': f'信息提取失败: {str(e)}'}), 500
 
