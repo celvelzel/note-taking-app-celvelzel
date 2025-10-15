@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -19,13 +20,23 @@ CORS(app)
 # register blueprints
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(note_bp, url_prefix='/api')
-# configure database to use repository-root `database/app.db`
+# Configure database URI:
+# - Use DATABASE_URL environment variable (recommended for production).
+# - If DATABASE_URL is not set, fall back to an in-memory SQLite DB and
+#   log a clear warning. We intentionally do NOT create files on disk so
+#   this code is safe to run in read-only serverless environments like Vercel.
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-DB_PATH = os.path.join(ROOT_DIR, 'database', 'app.db')
-# ensure database directory exists
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DB_PATH}"
+database_url = os.getenv('DATABASE_URL')
+if database_url:
+    # support older postgres:// prefix
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
+    # No DATABASE_URL provided — use in-memory SQLite (ephemeral).
+    # Log a prominent warning so deployers know to set DATABASE_URL for production.
+    print('Warning: DATABASE_URL not set; using in-memory SQLite. Configure DATABASE_URL to use a persistent remote database.')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 with app.app_context():

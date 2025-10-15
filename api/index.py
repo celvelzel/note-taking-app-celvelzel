@@ -1,3 +1,116 @@
+"""Vercel adapter: import Flask app from src.main and expose multiple entrypoints.
+
+Exports:
+- app: Flask instance (preferred by some runtimes)
+- wsgi_handler(environ, start_response): explicit WSGI callable
+- handler: a lightweight BaseHTTPRequestHandler subclass for runtimes that
+  expect a class and might perform issubclass checks.
+"""
+import io
+import sys
+import os
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import urlsplit, unquote
+
+# Ensure project root is on sys.path so `src` package imports work
+ROOT = os.path.dirname(os.path.dirname(__file__))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+try:
+    from src.main import app  # type: ignore
+except Exception as e:
+    raise RuntimeError(f"Failed to import Flask app from src.main: {e}")
+
+
+def wsgi_handler(environ, start_response):
+    return app.wsgi_app(environ, start_response)
+
+
+class handler(BaseHTTPRequestHandler):
+    def _build_environ(self):
+        parsed = urlsplit(self.path)
+        content_length = int(self.headers.get('Content-Length', 0) or 0)
+        body = self.rfile.read(content_length) if content_length else b''
+
+        environ = {
+            'wsgi.version': (1, 0),
+            'wsgi.url_scheme': 'https' if self.server.server_port == 443 else 'http',
+            'wsgi.input': io.BytesIO(body),
+            'wsgi.errors': sys.stderr,
+            'wsgi.multithread': False,
+            'wsgi.multiprocess': False,
+            'wsgi.run_once': False,
+            'REQUEST_METHOD': self.command,
+            'PATH_INFO': unquote(parsed.path),
+            'QUERY_STRING': parsed.query or '',
+            'SERVER_NAME': self.server.server_name or '',
+            'SERVER_PORT': str(self.server.server_port),
+            'SERVER_PROTOCOL': self.request_version,
+        }
+
+        for k, v in self.headers.items():
+            environ['HTTP_' + k.upper().replace('-', '_')] = v
+
+        if 'Content-Type' in self.headers:
+            environ['CONTENT_TYPE'] = self.headers.get('Content-Type')
+        if content_length:
+            environ['CONTENT_LENGTH'] = str(content_length)
+
+        return environ
+
+    def _start_response(self, status, response_headers, exc_info=None):
+        self._status = status
+        self._response_headers = response_headers
+        return None
+
+    def _proxy(self):
+        try:
+            print(f"handler proxying: method={self.command} path={self.path} client={self.client_address}")
+        except Exception:
+            pass
+
+        environ = self._build_environ()
+        result = app.wsgi_app(environ, self._start_response)
+
+        status_code = int(getattr(self, '_status', '200').split()[0])
+        self.send_response(status_code)
+        for name, value in getattr(self, '_response_headers', []):
+            self.send_header(name, value)
+        self.end_headers()
+
+        for data in result:
+            if isinstance(data, str):
+                data = data.encode()
+            if data:
+                self.wfile.write(data)
+
+        if hasattr(result, 'close'):
+            result.close()
+
+    def do_GET(self):
+        self._proxy()
+
+    def do_POST(self):
+        self._proxy()
+
+    def do_PUT(self):
+        self._proxy()
+
+    def do_DELETE(self):
+        self._proxy()
+
+    def do_HEAD(self):
+        self._proxy()
+
+    def do_OPTIONS(self):
+        self._proxy()
+
+    def do_PATCH(self):
+        self._proxy()
+
+
+__all__ = ['app', 'wsgi_handler', 'handler']
 """Vercel function entry point.
 
 This file exposes multiple entry points to maximize compatibility with different
