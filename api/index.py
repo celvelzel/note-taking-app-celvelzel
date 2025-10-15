@@ -1,3 +1,146 @@
+"""Minimal Vercel adapter for the Flask app in src.main.
+
+Exports:
+- app: Flask instance
+- wsgi_handler(environ, start_response): WSGI callable
+- handler: BaseHTTPRequestHandler subclass that proxies requests to the WSGI app
+"""
+import io
+import sys
+import os
+import traceback
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import urlsplit, unquote
+
+# Ensure project root is on sys.path so `src` package imports work
+ROOT = os.path.dirname(os.path.dirname(__file__))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+try:
+    from src.main import app  # type: ignore
+except Exception as e:
+    # Print full traceback for Vercel logs to help debugging import failures
+    print("ERROR importing src.main.app:")
+    traceback.print_exc()
+    raise RuntimeError(f"Failed to import Flask app from src.main: {e}")
+else:
+    print("Imported Flask app from src.main successfully.")
+
+
+def wsgi_handler(environ, start_response):
+    # Log minimal request info for Vercel logs
+    try:
+        method = environ.get('REQUEST_METHOD') or environ.get('REQUEST_METHOD', '')
+        path = environ.get('PATH_INFO') or environ.get('PATH_INFO', '')
+        print(f"wsgi_handler called: {method} {path}")
+    except Exception:
+        pass
+    return app.wsgi_app(environ, start_response)
+
+
+class ProxyHTTPRequestHandler(BaseHTTPRequestHandler):
+    """Proxy HTTP handler that forwards requests to the Flask WSGI app.
+
+    Provides implementations for common HTTP methods to avoid 501 responses.
+    """
+
+    def _build_environ(self):
+        parsed = urlsplit(self.path)
+        content_length = int(self.headers.get('Content-Length', 0) or 0)
+        body = self.rfile.read(content_length) if content_length else b''
+
+        environ = {
+            'wsgi.version': (1, 0),
+            'wsgi.url_scheme': 'https' if self.server.server_port == 443 else 'http',
+            'wsgi.input': io.BytesIO(body),
+            'wsgi.errors': sys.stderr,
+            'wsgi.multithread': False,
+            'wsgi.multiprocess': False,
+            'wsgi.run_once': False,
+            'REQUEST_METHOD': self.command,
+            'PATH_INFO': unquote(parsed.path),
+            'QUERY_STRING': parsed.query or '',
+            'SERVER_NAME': self.server.server_name or '',
+            'SERVER_PORT': str(self.server.server_port),
+            'SERVER_PROTOCOL': self.request_version,
+        }
+
+        for k, v in self.headers.items():
+            environ['HTTP_' + k.upper().replace('-', '_')] = v
+
+        if 'Content-Type' in self.headers:
+            environ['CONTENT_TYPE'] = self.headers.get('Content-Type')
+        if content_length:
+            environ['CONTENT_LENGTH'] = str(content_length)
+
+        return environ
+
+    def _start_response(self, status, response_headers, exc_info=None):
+        self._status = status
+        self._response_headers = response_headers
+        return None
+
+    def _proxy(self):
+        try:
+            print(f"ProxyHTTPRequestHandler handling: {self.command} {self.path} from {self.client_address}")
+        except Exception:
+            pass
+
+        environ = self._build_environ()
+        try:
+            result = app.wsgi_app(environ, self._start_response)
+        except Exception:
+            print("Exception while proxying to app.wsgi_app:")
+            traceback.print_exc()
+            # Respond with 500
+            try:
+                self.send_error(500)
+            except Exception:
+                pass
+            return
+
+        status_code = int(getattr(self, '_status', '200').split()[0])
+        self.send_response(status_code)
+        for name, value in getattr(self, '_response_headers', []):
+            self.send_header(name, value)
+        self.end_headers()
+
+        for data in result:
+            if isinstance(data, str):
+                data = data.encode()
+            if data:
+                self.wfile.write(data)
+
+        if hasattr(result, 'close'):
+            result.close()
+
+    # Implement common methods
+    def do_GET(self):
+        self._proxy()
+
+    def do_POST(self):
+        self._proxy()
+
+    def do_PUT(self):
+        self._proxy()
+
+    def do_DELETE(self):
+        self._proxy()
+
+    def do_HEAD(self):
+        self._proxy()
+
+    def do_OPTIONS(self):
+        self._proxy()
+
+    def do_PATCH(self):
+        self._proxy()
+
+
+# Export names expected by Vercel / other runtimes
+handler = ProxyHTTPRequestHandler
+__all__ = ['app', 'wsgi_handler', 'handler']
 """Vercel adapter: import Flask app from src.main and expose multiple entrypoints.
 
 Exports:
@@ -270,7 +413,7 @@ from http.server import BaseHTTPRequestHandler
 # ---------- 应用与扩展初始化 ----------
 # 创建 Flask 应用，static 指向 src/static（用于部署 SPA 前端）
 app = Flask(__name__, static_folder=str(project_root / "src" / "static"))
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "asdfFGSgvasgf5WGT")
 
 # 启用跨域（简单开启，生产需按需配置）
 CORS(app)
@@ -284,8 +427,7 @@ try:
     from src.models.note import Note
     _have_models = True
 except Exception as e:
-    # 导入失败时打印错误并建立临时 db 实例以允许最小化启动
-    print(f"Import warning (models/blueprints): {e}")
+    # 导入失败时打印错误并建立临时 db 对象
     from flask_sqlalchemy import SQLAlchemy
     db = SQLAlchemy()
     user_bp = None

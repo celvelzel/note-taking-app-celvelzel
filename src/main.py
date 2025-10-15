@@ -20,6 +20,7 @@ CORS(app)
 # register blueprints
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(note_bp, url_prefix='/api')
+print('Registered blueprints: user_bp={}, note_bp={}'.format(bool(user_bp), bool(note_bp)))
 # Configure database URI:
 # - Use DATABASE_URL environment variable (recommended for production).
 # - If DATABASE_URL is not set, fall back to an in-memory SQLite DB and
@@ -37,10 +38,17 @@ else:
     # Log a prominent warning so deployers know to set DATABASE_URL for production.
     print('Warning: DATABASE_URL not set; using in-memory SQLite. Configure DATABASE_URL to use a persistent remote database.')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+print(f"SQLALCHEMY_DATABASE_URI = {app.config.get('SQLALCHEMY_DATABASE_URI')}")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
-with app.app_context():
-    db.create_all()
+try:
+    with app.app_context():
+        db.create_all()
+        print('db.create_all() completed')
+except Exception as e:
+    print('Exception during db.create_all():')
+    import traceback
+    traceback.print_exc()
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
