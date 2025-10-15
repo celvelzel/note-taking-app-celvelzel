@@ -53,12 +53,10 @@ except Exception as e:
     print(f"Database initialization error: {e}")
 
 # 为Vercel创建数据库表
-@app.before_first_request
-def create_tables():
-    try:
-        db.create_all()
-    except Exception as e:
-        print(f"Error creating tables: {e}")
+# 应用启动时直接初始化数据库
+with app.app_context():
+    # 初始化数据库表结构（如未创建则自动创建）
+    db.create_all()
 
 # 静态文件路由
 @app.route('/', defaults={'path': ''})
