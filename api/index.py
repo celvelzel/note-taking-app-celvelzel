@@ -1,3 +1,145 @@
+"""Vercel function entry point.
+
+This file exposes multiple entry points to maximize compatibility with different
+Vercel Python runtime detection strategies:
+
+- `app`: the Flask application instance imported from `src.main` (WSGI app)
+- `wsgi_handler(environ, start_response)`: explicit WSGI callable that delegates to `app.wsgi_app`
+- `handler`: a class placeholder inheriting from BaseHTTPRequestHandler so that
+  runtimes that perform `issubclass(handler, BaseHTTPRequestHandler)` checks
+  won't raise TypeError. This class also proxies requests to the WSGI app when
+  instantiated by a server.
+
+Keep this file minimal: actual app logic lives in `src/main.py`.
+"""
+
+import io
+import sys
+import os
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import urlsplit, unquote
+
+# Ensure project root is on sys.path so `src` package imports work
+ROOT = os.path.dirname(os.path.dirname(__file__))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+try:
+    # Import the Flask app from src.main
+    from src.main import app  # type: ignore
+except Exception as e:
+    # Provide a clear import-time error for Vercel logs
+    raise RuntimeError(f"Failed to import Flask app from src.main: {e}")
+
+
+def wsgi_handler(environ, start_response):
+    """Explicit WSGI callable that delegates to the Flask WSGI app.
+
+    Some runtimes call a function with the WSGI signature directly. Expose
+    this to be explicit and simple.
+    """
+    return app.wsgi_app(environ, start_response)
+
+
+class handler(BaseHTTPRequestHandler):
+    """A lightweight handler class that proxies requests to the Flask WSGI app.
+
+    This class exists primarily to satisfy runtimes that expect `handler` to
+    be a class and may perform `issubclass` checks. When instantiated by an
+    HTTP server, it will forward the request to the WSGI app and write the
+    response back.
+    """
+
+    def _build_environ(self):
+        parsed = urlsplit(self.path)
+        content_length = int(self.headers.get('Content-Length', 0) or 0)
+        body = self.rfile.read(content_length) if content_length else b''
+
+        environ = {
+            'wsgi.version': (1, 0),
+            'wsgi.url_scheme': 'https' if self.server.server_port == 443 else 'http',
+            'wsgi.input': io.BytesIO(body),
+            'wsgi.errors': sys.stderr,
+            'wsgi.multithread': False,
+            'wsgi.multiprocess': False,
+            'wsgi.run_once': False,
+            'REQUEST_METHOD': self.command,
+            'PATH_INFO': unquote(parsed.path),
+            'QUERY_STRING': parsed.query or '',
+            'SERVER_NAME': self.server.server_name or '',
+            'SERVER_PORT': str(self.server.server_port),
+            'SERVER_PROTOCOL': self.request_version,
+        }
+
+        for k, v in self.headers.items():
+            environ['HTTP_' + k.upper().replace('-', '_')] = v
+
+        if 'Content-Type' in self.headers:
+            environ['CONTENT_TYPE'] = self.headers.get('Content-Type')
+        if content_length:
+            environ['CONTENT_LENGTH'] = str(content_length)
+
+        return environ
+
+    def _start_response(self, status, response_headers, exc_info=None):
+        self._status = status
+        self._response_headers = response_headers
+        return None
+
+    def _proxy(self):
+        # Debug log for Vercel logs (helps identify which handler served the request)
+        try:
+            print(f"handler proxying: method={self.command} path={self.path} client={self.client_address}")
+        except Exception:
+            pass
+
+        environ = self._build_environ()
+        result = app.wsgi_app(environ, self._start_response)
+
+        status_code = int(getattr(self, '_status', '200').split()[0])
+        self.send_response(status_code)
+        for name, value in getattr(self, '_response_headers', []):
+            self.send_header(name, value)
+        self.end_headers()
+
+        for data in result:
+            if isinstance(data, str):
+                data = data.encode()
+            if data:
+                self.wfile.write(data)
+
+        if hasattr(result, 'close'):
+            result.close()
+
+    # Implement common methods so BaseHTTPRequestHandler doesn't return 501
+    def do_GET(self):
+        self._proxy()
+
+    def do_POST(self):
+        self._proxy()
+
+    def do_PUT(self):
+        self._proxy()
+
+    def do_DELETE(self):
+        self._proxy()
+
+    def do_HEAD(self):
+        self._proxy()
+
+    def do_OPTIONS(self):
+        self._proxy()
+
+    def do_PATCH(self):
+        self._proxy()
+
+
+# Exports expected by different runtimes
+# - app: Flask instance
+# - wsgi_handler: explicit WSGI callable
+# - handler: class for runtime checks (and can be used by simple HTTP servers)
+
+__all__ = ['app', 'wsgi_handler', 'handler']
 import os
 import sys
 from pathlib import Path
