@@ -6,7 +6,6 @@
 因为某些 Vercel 运行时会对导出的对象做 `issubclass`/实例化等检查，
 这可能触发 501/TypeError 等不期望的运行时行为。
 
-中文注释：本文件保持精简 — 应用逻辑在 `src/main.py`。
 """
 
 import sys

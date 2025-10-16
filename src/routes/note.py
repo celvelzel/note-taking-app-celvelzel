@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, jsonify, request
 from src.models.note import Note, db
 from datetime import datetime
@@ -131,4 +132,101 @@ def extract_information():
         except Exception:
             pass
         return jsonify({'error': f'信息提取失败: {str(e)}'}), 500
+
+
+@note_bp.route('/notes/translate', methods=['POST'])
+def translate_note():
+    """调用AI服务将笔记内容翻译为指定语言并可选保存结果"""
+    from src.services.ai_service import translate_note_content
+
+    try:
+        data = request.json or {}
+        content = (data.get('content') or '').strip()
+        language = (data.get('language') or '').strip()
+        note_id = data.get('note_id')
+
+        if not content:
+            return jsonify({'error': '笔记内容不能为空'}), 400
+        if not language:
+            return jsonify({'error': '目标语言不能为空'}), 400
+
+        translation = translate_note_content(content, language)
+
+        # 如果返回的字符串以错误标识开头，则视为失败
+        if isinstance(translation, str) and translation.startswith('❌'):
+            return jsonify({'error': translation}), 500
+
+        saved = False
+        if note_id:
+            note = Note.query.get(note_id)
+            if not note:
+                return jsonify({'error': '笔记不存在'}), 404
+
+            try:
+                translations = json.loads(note.translations) if note.translations else {}
+            except json.JSONDecodeError:
+                translations = {}
+
+            translations[language] = translation
+            note.translations = json.dumps(translations, ensure_ascii=False)
+            note.translation_updated_at = datetime.utcnow()
+            note.updated_at = datetime.utcnow()
+            db.session.commit()
+            saved = True
+
+        return jsonify({
+            'success': True,
+            'translation': translation,
+            'language': language,
+            'saved': saved
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'翻译失败: {str(e)}'}), 500
+
+
+@note_bp.route('/notes/generate-quiz', methods=['POST'])
+def generate_quiz():
+    """基于笔记内容自动生成一道选择题并可选保存"""
+    from src.services.ai_service import generate_quiz_question
+
+    try:
+        data = request.json or {}
+        content = (data.get('content') or '').strip()
+        note_id = data.get('note_id')
+
+        if not content:
+            return jsonify({'error': '笔记内容不能为空'}), 400
+
+        quiz_payload = generate_quiz_question(content)
+
+        if not isinstance(quiz_payload, dict):
+            return jsonify({'error': '题目生成失败，请稍后重试'}), 500
+
+        if quiz_payload.get('error'):
+            return jsonify({'error': quiz_payload.get('error'), 'raw': quiz_payload.get('raw')}), 500
+
+        saved = False
+        if note_id:
+            note = Note.query.get(note_id)
+            if not note:
+                return jsonify({'error': '笔记不存在'}), 404
+
+            note.quiz_question = quiz_payload.get('question')
+            note.quiz_options = json.dumps(quiz_payload.get('options', []), ensure_ascii=False)
+            note.quiz_answer = quiz_payload.get('answer')
+            note.quiz_explanation = quiz_payload.get('explanation')
+            note.quiz_generated_at = datetime.utcnow()
+            note.updated_at = datetime.utcnow()
+            db.session.commit()
+            saved = True
+
+        return jsonify({
+            'success': True,
+            'quiz': quiz_payload,
+            'saved': saved
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'生成题目失败: {str(e)}'}), 500
 

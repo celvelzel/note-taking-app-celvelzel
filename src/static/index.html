@@ -91,6 +91,204 @@
             overflow: hidden; /* 由内部元素处理滚动 */
         }
 
+        .editor-form {
+            display: none;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .editor-content-area {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .editor-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .assistant-panel {
+            flex: 1;
+            max-width: 45%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: rgba(248, 249, 250, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-y: auto;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .assistant-panel h3 {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .translate-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .translate-action-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .language-select {
+            flex: 1;
+            min-width: 160px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+            font-size: 14px;
+        }
+
+        .btn-translate {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-translate:disabled {
+            background: #6c757d;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn-translate:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .translation-output {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 15px;
+            min-height: 160px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .translation-empty {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .translation-meta {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .quiz-section {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-quiz {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #5a2d82;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-quiz:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(255, 154, 158, 0.2);
+        }
+
+        .btn-quiz:disabled {
+            background: #f1f1f1;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .quiz-question {
+            font-weight: 600;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-option {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .quiz-option:hover {
+            border-color: #ea6699;
+            background: #fff0f5;
+        }
+
+        .quiz-option.correct {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .quiz-option.incorrect {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .quiz-feedback {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .assistant-placeholder {
+            color: #999;
+            font-size: 13px;
+            text-align: center;
+            padding: 20px 10px;
+        }
+
         .search-box {
             width: 100%;
             padding: 12px 15px;
@@ -436,6 +634,16 @@
                 max-height: 40vh; /* 在小屏幕上限制侧边栏高度 */
             }
 
+            .editor-content-area {
+                flex-direction: column;
+            }
+
+            .assistant-panel {
+                max-width: 100%;
+                height: auto;
+                max-height: 45vh;
+            }
+
             .editor-title {
                 max-width: 60%;
             }
@@ -469,6 +677,10 @@
             .pagination {
                 flex-direction: column;
                 gap: 10px;
+            }
+
+            .assistant-panel {
+                max-height: none;
             }
         }
 
@@ -536,15 +748,56 @@
 
                 <div id="messageArea"></div>
 
-                <div id="editorForm" style="display: none; flex: 1; display: flex; flex-direction: column;">
-                    <div class="form-group">
-                        <label class="form-label" for="noteTitle">Title</label>
-                        <input type="text" class="form-input" id="noteTitle" placeholder="Enter note title...">
-                    </div>
+                <div id="editorForm" class="editor-form">
+                    <div class="editor-content-area">
+                        <div class="editor-main">
+                            <div class="form-group">
+                                <label class="form-label" for="noteTitle">Title</label>
+                                <input type="text" class="form-input" id="noteTitle" placeholder="Enter note title...">
+                            </div>
 
-                    <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
-                        <label class="form-label" for="noteContent">Content</label>
-                        <textarea class="form-textarea" id="noteContent" placeholder="Start writing your note..."></textarea>
+                            <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+                                <label class="form-label" for="noteContent">Content</label>
+                                <textarea class="form-textarea" id="noteContent" placeholder="Start writing your note..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="assistant-panel">
+                            <section class="translation-section">
+                                <div class="quiz-header" style="margin-bottom: 8px;">
+                                    <h3>🌐 AI翻译助手</h3>
+                                </div>
+                                <div class="translate-controls">
+                                    <label class="translation-meta" for="languageSelect">选择目标语言</label>
+                                    <div class="translate-action-row">
+                                        <select class="language-select" id="languageSelect">
+                                            <option value="简体中文">简体中文</option>
+                                            <option value="English">English</option>
+                                            <option value="日本語">日本語</option>
+                                            <option value="Español">Español</option>
+                                            <option value="Français">Français</option>
+                                            <option value="Deutsch">Deutsch</option>
+                                        </select>
+                                        <button class="btn-translate" id="translateBtn">🌐 翻译笔记</button>
+                                    </div>
+                                </div>
+                                <p class="translation-meta" id="translationStatus">选择语言后点击翻译，即可在此处查看AI翻译结果。</p>
+                                <div class="translation-output" id="translationOutput">
+                                    <div class="assistant-placeholder">尚未生成翻译内容</div>
+                                </div>
+                            </section>
+
+                            <section class="quiz-section">
+                                <div class="quiz-header">
+                                    <h3>🧩 智能练习</h3>
+                                    <button class="btn-quiz" id="quizBtn">生成选择题</button>
+                                </div>
+                                <div id="quizContent">
+                                    <p class="assistant-placeholder">点击上方按钮，AI将根据笔记内容生成一道巩固练习题。</p>
+                                </div>
+                                <div class="quiz-feedback" id="quizFeedback"></div>
+                            </section>
+                        </div>
                     </div>
                 </div>
 
@@ -565,6 +818,10 @@
                 this.currentPage = 1;
                 this.notesPerPage = 10;
                 this.filteredNotes = [];
+                this.translationLoading = false;
+                this.quizLoading = false;
+                this.selectedLanguage = '简体中文';
+                this.selectedQuizOption = null;
                 this.init();
             }
 
@@ -580,6 +837,10 @@
                 document.getElementById('extractBtn').addEventListener('click', () => this.extractInformation());
                 document.getElementById('viewInfoBtn').addEventListener('click', () => this.viewExtractedInfo());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
+                document.getElementById('languageSelect').addEventListener('change', (e) => this.handleLanguageChange(e.target.value));
+                document.getElementById('translateBtn').addEventListener('click', () => this.translateCurrentNote());
+                document.getElementById('quizBtn').addEventListener('click', () => this.generateQuiz());
+                document.getElementById('quizContent').addEventListener('click', (event) => this.handleQuizOptionClick(event));
                 
                 // 分页按钮事件
                 document.getElementById('prevBtn').addEventListener('click', () => this.goToPrevPage());
@@ -608,7 +869,8 @@
                     const response = await fetch('/api/notes');
                     if (!response.ok) throw new Error('Failed to load notes');
 
-                    this.notes = await response.json();
+                    const data = await response.json();
+                    this.notes = data.map(note => this.normalizeNote(note));
                     this.filteredNotes = [...this.notes]; // 初始化过滤后的笔记列表
                     this.currentPage = 1; // 重置到第一页
                     this.renderNotesList();
@@ -691,17 +953,21 @@
                 const note = this.notes.find(n => n.id === noteId);
                 if (!note) return;
 
-                this.currentNote = note;
+                this.currentNote = this.normalizeNote(note);
+                this.syncCurrentNote();
                 this.showEditor();
                 this.renderNotesList(); // Re-render to update active state
 
-                document.getElementById('noteTitle').value = note.title || '';
-                document.getElementById('noteContent').value = note.content || '';
-                document.getElementById('editorTitle').textContent = note.title || 'Untitled Note';
+                document.getElementById('noteTitle').value = this.currentNote.title || '';
+                document.getElementById('noteContent').value = this.currentNote.content || '';
+                document.getElementById('editorTitle').textContent = this.currentNote.title || 'Untitled Note';
+                document.getElementById('languageSelect').value = this.selectedLanguage;
+                this.renderTranslation(this.selectedLanguage);
+                this.renderQuiz();
                 
                 // 显示或隐藏查看提取信息按钮
                 const viewInfoBtn = document.getElementById('viewInfoBtn');
-                if (note.extracted_info) {
+                if (this.currentNote.extracted_info) {
                     viewInfoBtn.style.display = 'inline-block';
                 } else {
                     viewInfoBtn.style.display = 'none';
@@ -715,6 +981,13 @@
                     content: '',
                     extracted_info: null,
                     extracted_at: null,
+                    translations: {},
+                    translation_updated_at: null,
+                    quiz_question: null,
+                    quiz_options: [],
+                    quiz_answer: null,
+                    quiz_explanation: null,
+                    quiz_generated_at: null,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 };
@@ -724,9 +997,13 @@
                 document.getElementById('noteContent').value = '';
                 document.getElementById('editorTitle').textContent = 'New Note';
                 document.getElementById('noteTitle').focus();
+                this.selectedLanguage = '简体中文';
+                document.getElementById('languageSelect').value = this.selectedLanguage;
 
                 // 隐藏查看提取信息按钮（新笔记没有提取信息）
                 document.getElementById('viewInfoBtn').style.display = 'none';
+
+                this.resetAssistantPanels();
 
                 // Remove active state from all notes
                 document.querySelectorAll('.note-item').forEach(item => {
@@ -749,6 +1026,28 @@
                 document.getElementById('editorActions').style.display = 'none';
                 document.getElementById('editorTitle').textContent = 'Select a note to edit';
                 this.currentNote = null;
+                this.resetAssistantPanels();
+            }
+
+            resetAssistantPanels() {
+                const translationOutput = document.getElementById('translationOutput');
+                const translationStatus = document.getElementById('translationStatus');
+                const quizContent = document.getElementById('quizContent');
+                const quizFeedback = document.getElementById('quizFeedback');
+
+                if (translationOutput) {
+                    translationOutput.innerHTML = '<div class="assistant-placeholder">尚未生成翻译内容</div>';
+                }
+                if (translationStatus) {
+                    translationStatus.textContent = '选择语言后点击翻译，即可在此处查看AI翻译结果。';
+                }
+                if (quizContent) {
+                    quizContent.innerHTML = '<p class="assistant-placeholder">点击上方按钮，AI将根据笔记内容生成一道巩固练习题。</p>';
+                }
+                if (quizFeedback) {
+                    quizFeedback.textContent = '';
+                }
+                this.selectedQuizOption = null;
             }
 
             async saveNote(isAutoSave = false) {
@@ -790,26 +1089,29 @@
                     if (!response.ok) throw new Error('Failed to save note');
 
                     const savedNote = await response.json();
-                    this.currentNote = savedNote;
+                    const normalizedNote = this.normalizeNote(savedNote);
+                    this.currentNote = normalizedNote;
 
                     // Update notes list
-                    const existingIndex = this.notes.findIndex(n => n.id === savedNote.id);
+                    const existingIndex = this.notes.findIndex(n => n.id === normalizedNote.id);
                     if (existingIndex >= 0) {
-                        this.notes[existingIndex] = savedNote;
+                        this.notes[existingIndex] = normalizedNote;
                     } else {
-                        this.notes.unshift(savedNote);
+                        this.notes.unshift(normalizedNote);
                     }
 
                     // 更新过滤后的列表
-                    const filteredIndex = this.filteredNotes.findIndex(n => n.id === savedNote.id);
+                    const filteredIndex = this.filteredNotes.findIndex(n => n.id === normalizedNote.id);
                     if (filteredIndex >= 0) {
-                        this.filteredNotes[filteredIndex] = savedNote;
+                        this.filteredNotes[filteredIndex] = normalizedNote;
                     } else {
-                        this.filteredNotes.unshift(savedNote);
+                        this.filteredNotes.unshift(normalizedNote);
                     }
 
                     this.renderNotesList();
-                    document.getElementById('editorTitle').textContent = savedNote.title;
+                    document.getElementById('editorTitle').textContent = normalizedNote.title;
+                    this.renderTranslation(this.selectedLanguage);
+                    this.renderQuiz();
 
                     if (!isAutoSave) {
                         this.showMessage('Note saved successfully!', 'success');
@@ -882,12 +1184,7 @@
                     if (result.saved && this.currentNote) {
                         this.currentNote.extracted_info = result.extracted_info;
                         this.currentNote.extracted_at = new Date().toISOString();
-                        
-                        // 更新notes列表中的对应笔记
-                        const noteIndex = this.notes.findIndex(n => n.id === this.currentNote.id);
-                        if (noteIndex >= 0) {
-                            this.notes[noteIndex] = { ...this.currentNote };
-                        }
+                        this.syncCurrentNote();
                         
                         // 显示查看提取信息按钮
                         document.getElementById('viewInfoBtn').style.display = 'inline-block';
@@ -979,6 +1276,251 @@
                 this.showExtractedInfo(infoWithTimestamp);
             }
 
+            normalizeNote(note) {
+                if (!note) return null;
+                const safeNote = { ...note };
+                // 确保翻译结果以对象形式存在
+                if (!safeNote.translations || typeof safeNote.translations !== 'object' || Array.isArray(safeNote.translations)) {
+                    safeNote.translations = {};
+                }
+                // 确保题目选项为数组
+                if (!Array.isArray(safeNote.quiz_options)) {
+                    safeNote.quiz_options = [];
+                }
+                safeNote.quiz_question = safeNote.quiz_question || null;
+                safeNote.quiz_answer = safeNote.quiz_answer || null;
+                safeNote.quiz_explanation = safeNote.quiz_explanation || null;
+                return safeNote;
+            }
+
+            syncCurrentNote() {
+                if (!this.currentNote) return;
+                this.currentNote = this.normalizeNote(this.currentNote);
+
+                if (this.currentNote && this.currentNote.id) {
+                    this.notes = this.notes.map(note => note.id === this.currentNote.id ? this.currentNote : note);
+                    this.filteredNotes = this.filteredNotes.map(note => note.id === this.currentNote.id ? this.currentNote : note);
+                }
+            }
+
+            handleLanguageChange(language) {
+                this.selectedLanguage = language;
+                this.renderTranslation(language);
+            }
+
+            async translateCurrentNote() {
+                if (!this.currentNote) {
+                    this.showMessage('请先选择或创建一篇笔记', 'error');
+                    return;
+                }
+
+                const content = document.getElementById('noteContent').value.trim();
+                if (!content) {
+                    this.showMessage('笔记内容为空，无法翻译', 'error');
+                    return;
+                }
+
+                const languageSelect = document.getElementById('languageSelect');
+                const translateBtn = document.getElementById('translateBtn');
+                const translationStatus = document.getElementById('translationStatus');
+
+                const targetLanguage = languageSelect.value;
+                this.selectedLanguage = targetLanguage;
+
+                translateBtn.disabled = true;
+                const originalText = translateBtn.textContent;
+                translateBtn.textContent = '翻译中...';
+                translationStatus.textContent = `正在翻译为 ${targetLanguage}，请稍候...`;
+
+                try {
+                    const response = await fetch('/api/notes/translate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            note_id: this.currentNote.id,
+                            content,
+                            language: targetLanguage
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.error || '翻译失败');
+                    }
+
+                    if (!this.currentNote.translations) {
+                        this.currentNote.translations = {};
+                    }
+
+                    this.currentNote.translations[targetLanguage] = result.translation;
+                    this.currentNote.translation_updated_at = new Date().toISOString();
+                    this.syncCurrentNote();
+                    this.renderTranslation(targetLanguage);
+
+                    if (result.saved) {
+                        translationStatus.textContent = `最近翻译时间：${new Date(this.currentNote.translation_updated_at).toLocaleString('zh-CN')}`;
+                    } else {
+                        translationStatus.textContent = '翻译已生成（笔记未保存，不会写入历史记录）';
+                    }
+
+                    this.showMessage('翻译完成！', 'success');
+                } catch (error) {
+                    translationStatus.textContent = `翻译失败：${error.message}`;
+                    this.showMessage(`翻译失败: ${error.message}`, 'error');
+                } finally {
+                    translateBtn.disabled = false;
+                    translateBtn.textContent = originalText;
+                }
+            }
+
+            renderTranslation(language) {
+                const translationOutput = document.getElementById('translationOutput');
+                const translationStatus = document.getElementById('translationStatus');
+
+                if (!this.currentNote) {
+                    translationOutput.innerHTML = '<div class="assistant-placeholder">请选择一篇笔记后再进行翻译</div>';
+                    translationStatus.textContent = '选择语言后点击翻译，即可在此处查看AI翻译结果。';
+                    return;
+                }
+
+                const translations = this.currentNote.translations || {};
+                const text = translations[language];
+
+                if (text) {
+                    translationOutput.textContent = text;
+                    const updatedAt = this.currentNote.translation_updated_at ?
+                        new Date(this.currentNote.translation_updated_at).toLocaleString('zh-CN') : '刚刚';
+                    translationStatus.textContent = `当前展示：${language}（更新于 ${updatedAt}）`;
+                } else {
+                    const availableLanguages = Object.keys(translations);
+                    if (availableLanguages.length > 0) {
+                        translationOutput.innerHTML = `<div class="assistant-placeholder">当前语言暂无翻译，可切换到 ${availableLanguages.join('、')} 查看历史翻译。</div>`;
+                    } else {
+                        translationOutput.innerHTML = '<div class="assistant-placeholder">尚未生成翻译内容</div>';
+                    }
+                    translationStatus.textContent = '选择语言后点击翻译，即可在此处查看AI翻译结果。';
+                }
+            }
+
+            async generateQuiz() {
+                if (!this.currentNote) {
+                    this.showMessage('请先选择或创建一篇笔记', 'error');
+                    return;
+                }
+
+                const content = document.getElementById('noteContent').value.trim();
+                if (!content) {
+                    this.showMessage('笔记内容为空，无法生成题目', 'error');
+                    return;
+                }
+
+                const quizBtn = document.getElementById('quizBtn');
+                const quizContent = document.getElementById('quizContent');
+                const quizFeedback = document.getElementById('quizFeedback');
+
+                quizBtn.disabled = true;
+                const originalText = quizBtn.textContent;
+                quizBtn.textContent = '生成中...';
+                quizContent.innerHTML = '<p class="assistant-placeholder">AI正在分析笔记并生成练习题，请稍候...</p>';
+                quizFeedback.textContent = '';
+
+                try {
+                    const response = await fetch('/api/notes/generate-quiz', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            note_id: this.currentNote.id,
+                            content
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.error || '生成失败');
+                    }
+
+                    const quiz = result.quiz || {};
+                    this.currentNote.quiz_question = quiz.question || null;
+                    this.currentNote.quiz_options = Array.isArray(quiz.options) ? quiz.options : [];
+                    this.currentNote.quiz_answer = quiz.answer || null;
+                    this.currentNote.quiz_explanation = quiz.explanation || '';
+                    this.currentNote.quiz_generated_at = new Date().toISOString();
+                    this.selectedQuizOption = null;
+
+                    this.syncCurrentNote();
+                    this.renderQuiz();
+                    quizFeedback.textContent = '请选择一个选项查看答案解析。';
+                    this.showMessage('题目生成成功！', 'success');
+                } catch (error) {
+                    quizContent.innerHTML = `<p class="assistant-placeholder">生成题目失败：${this.escapeHtml(error.message)}</p>`;
+                    this.showMessage(`题目生成失败: ${error.message}`, 'error');
+                } finally {
+                    quizBtn.disabled = false;
+                    quizBtn.textContent = originalText;
+                }
+            }
+
+            renderQuiz() {
+                const quizContent = document.getElementById('quizContent');
+                const quizFeedback = document.getElementById('quizFeedback');
+
+                if (!this.currentNote || !this.currentNote.quiz_question) {
+                    quizContent.innerHTML = '<p class="assistant-placeholder">点击上方按钮，AI将根据笔记内容生成一道巩固练习题。</p>';
+                    quizFeedback.textContent = '';
+                    return;
+                }
+
+                const generatedAt = this.currentNote.quiz_generated_at ?
+                    new Date(this.currentNote.quiz_generated_at).toLocaleString('zh-CN') : '刚刚';
+
+                const optionsHtml = (this.currentNote.quiz_options || []).map(option => `
+                    <div class="quiz-option" data-option="${this.escapeHtml(option.label)}">
+                        <strong>${this.escapeHtml(option.label)}.</strong>
+                        <span>${this.escapeHtml((option.text || ''))}</span>
+                    </div>
+                `).join('');
+
+                quizContent.innerHTML = `
+                    <div class="quiz-question">${this.escapeHtml(this.currentNote.quiz_question)}</div>
+                    <div class="translation-meta">生成时间：${generatedAt}</div>
+                    <div class="quiz-options">${optionsHtml}</div>
+                `;
+
+                quizFeedback.textContent = '请选择一个选项查看答案解析。';
+            }
+
+            handleQuizOptionClick(event) {
+                const optionElement = event.target.closest('.quiz-option');
+                if (!optionElement || !this.currentNote || !this.currentNote.quiz_answer) {
+                    return;
+                }
+
+                const selectedOption = optionElement.getAttribute('data-option');
+                const correctOption = this.currentNote.quiz_answer;
+                const quizFeedback = document.getElementById('quizFeedback');
+
+                document.querySelectorAll('.quiz-option').forEach(el => {
+                    el.classList.remove('correct', 'incorrect');
+                });
+
+                if (selectedOption === correctOption) {
+                    optionElement.classList.add('correct');
+                    quizFeedback.textContent = `✅ 回答正确！${this.currentNote.quiz_explanation || ''}`;
+                } else {
+                    optionElement.classList.add('incorrect');
+                    quizFeedback.textContent = `❌ 回答不正确，正确答案是 ${correctOption}。${this.currentNote.quiz_explanation || ''}`;
+                    document.querySelectorAll('.quiz-option').forEach(el => {
+                        if (el.getAttribute('data-option') === correctOption) {
+                            el.classList.add('correct');
+                        }
+                    });
+                }
+
+                this.selectedQuizOption = selectedOption;
+            }
+
             searchNotes(query) {
                 if (query.trim() === '') {
                     this.filteredNotes = [...this.notes];
@@ -1008,7 +1550,7 @@
 
             escapeHtml(text) {
                 const div = document.createElement('div');
-                div.textContent = text;
+                div.textContent = text == null ? '' : text;
                 return div.innerHTML;
             }
 
